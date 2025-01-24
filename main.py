@@ -1,5 +1,72 @@
 import streamlit as st
 
+def parse_and_convert_currency(data, target_currency="GBP"):
+    # Pre-defined manual conversion rates
+    manual_rates = {
+        "GBP": 1,       # Base currency
+        "USD": 0.77,    # 1 USD = 0.77 GBP
+        "EUR": 0.88,    # 1 EUR = 0.88 GBP
+        "KRW": 0.00061, # 1 KRW = 0.00061 GBP
+        "BDT": 0.0075,  # 1 BDT = 0.0075 GBP
+        "KGS": 0.0089,  # 1 KGS = 0.0089 GBP
+        "AED": 0.22,    # 1 AED = 0.22 GBP
+        "JPY": 0.0058   # 1 JPY = 0.0058 GBP
+    }
+    
+    def extract_and_convert(value, currency_symbol):
+        # Extract numeric range using regex
+        match = re.findall(r"([\d,]+)", value)
+        if not match:
+            return None
+        
+        # Convert string numbers into floats
+        numbers = [float(num.replace(",", "")) for num in match]
+        if len(numbers) == 1:
+            # Single value (not a range)
+            amount = numbers[0]
+        elif len(numbers) == 2:
+            # Take the average of the range
+            amount = sum(numbers) / 2
+        else:
+            return None  # Unexpected format
+        
+        # Determine source currency
+        source_currency = currency_symbol_to_iso(currency_symbol)
+        if not source_currency:
+            return None
+        
+        # Perform manual currency conversion
+        rate = manual_rates.get(source_currency, None)
+        if rate:
+            return amount * rate
+        return None
+    
+    def currency_symbol_to_iso(symbol):
+        # Map symbols to ISO currency codes
+        mapping = {
+            "£": "GBP",
+            "$": "USD",
+            "€": "EUR",
+            "₩": "KRW",
+            "৳": "BDT",
+            "₭": "KGS",
+            "¥": "JPY",
+            "د.إ": "AED"
+        }
+        return mapping.get(symbol, None)
+    
+    # Process each university's data
+    for uni in data:
+        # Extract and convert living_cost
+        living_cost = uni.get("living_cost", "")
+        tuition_fee = uni.get("tuition_fee", "")
+        
+        uni["living_cost_converted"] = extract_and_convert(living_cost, living_cost[0])
+        uni["tuition_fee_converted"] = extract_and_convert(tuition_fee, tuition_fee[0])
+    
+    return data
+
+
 # Example university data (can be replaced with a full dataset as needed)
 universities = [
     {
@@ -287,6 +354,8 @@ universities = [
     
     
 ]
+
+
 
 
 # Helper function to extract and convert living cost ranges
