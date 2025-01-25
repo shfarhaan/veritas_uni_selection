@@ -1,8 +1,8 @@
 import streamlit as st
 
 # Data for universities
-universities = [
-       {
+UK_University_details = [
+    {
         "name": "Ulster University",
         "country": "UK",
         "city": "Coleraine",
@@ -14,6 +14,7 @@ universities = [
             "Master's": ["Data Science", "Cybersecurity", "MBA"],
             "PhD": ["Artificial Intelligence", "Medicine", "Law"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Known for its strong focus on employability and partnerships with industries."
     },
     {
@@ -28,6 +29,7 @@ universities = [
             "Master's": ["Sustainability", "Creative Writing", "Data Science"],
             "PhD": ["Environmental Studies", "Public Health", "Urban Design"]
         },
+        "intake": ["September", "January"],
         "additional_information": "A modern university focused on career readiness and diverse programs."
     },
     {
@@ -42,6 +44,7 @@ universities = [
             "Master's": ["Digital Marketing", "Human Resources", "Artificial Intelligence"],
             "PhD": ["Law and Policy", "Social Sciences", "Cybersecurity"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Offers strong support for international students and work placement opportunities."
     },
     {
@@ -56,6 +59,7 @@ universities = [
             "Master's": ["Big Data", "Renewable Energy", "Creative Industries"],
             "PhD": ["Computer Science", "Health Sciences", "Climate Change"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Known for its practical approach to learning and industry connections."
     },
     {
@@ -70,6 +74,7 @@ universities = [
             "Master's": ["Artificial Intelligence", "Energy Engineering", "International Business"],
             "PhD": ["Robotics", "Sustainable Engineering", "Economics"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Internationally recognized for innovation and research-led teaching."
     },
     {
@@ -84,6 +89,7 @@ universities = [
             "Master's": ["Cybersecurity", "Digital Marketing", "Education Management"],
             "PhD": ["Health Sciences", "Culture Studies", "Social Work"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Offers a strong support system for students and focuses on creative industries."
     },
     {
@@ -98,6 +104,7 @@ universities = [
             "Master's": ["Computer Science", "International Relations", "Data Science"],
             "PhD": ["Law", "Philosophy", "Public Health"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Renowned for its legal, medical, and engineering programs."
     },
     {
@@ -112,6 +119,7 @@ universities = [
             "Master's": ["Law", "Business Management", "Finance"],
             "PhD": ["Legal Studies", "Business"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Specializes in professional qualifications and postgraduate law courses."
     },
     {
@@ -126,6 +134,7 @@ universities = [
             "Master's": ["Political Science", "Environmental Studies", "Human Rights"],
             "PhD": ["Sociology", "Law", "Environmental Science"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Known for its research in social sciences and humanities."
     },
     {
@@ -140,6 +149,7 @@ universities = [
             "Master's": ["Financial Management", "Mechanical Engineering", "Environmental Studies"],
             "PhD": ["Business Management", "Engineering", "Health Sciences"]
         },
+        "intake": ["September", "January"],
         "additional_information": "A historical university with a focus on professional qualifications."
     },
     {
@@ -154,6 +164,7 @@ universities = [
             "Master's": ["Media Production", "Data Science", "Digital Marketing"],
             "PhD": ["Media Studies", "Fashion Design", "Graphic Design"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Focused on creative industries, design, and technology."
     },
     {
@@ -168,50 +179,49 @@ universities = [
             "Master's": ["Engineering Management", "Nursing", "Cybersecurity"],
             "PhD": ["Business Studies", "Engineering", "Nursing"]
         },
+        "intake": ["September", "January"],
         "additional_information": "Offers a variety of courses with a focus on employability and local partnerships."
     }
 ]
 
-# Streamlit app
-st.title("University Finder")
-st.markdown("Find universities based on your preferences!")
+# Streamlit app layout
+st.title("University Search")
 
-# User inputs
-st.sidebar.header("Filter Options")
-country = st.sidebar.selectbox("Select Country", sorted(set([u["country"] for u in universities])))
-city = st.sidebar.selectbox("Select City", sorted(set([u["city"] for u in universities if u["country"] == country])))
-distance = st.sidebar.slider("Distance from City Center (miles)", 0.0, 5.0, 2.0)
-subject_level = st.sidebar.radio("Select Subject Level", ["Bachelor's", "Master's", "PhD"])
-subject = st.sidebar.text_input("Enter Subject (Optional)")
-intake = st.sidebar.text_input("Enter Intake (e.g., Fall 2024)")
+# User Input Widgets
+country_choice = st.selectbox("Select Country", ["UK", "USA", "South Korea", "Japan", "EU", "UAE", "Kyrgyzstan"])
+city_choice = st.selectbox("Select City", ["London", "Edinburgh", "Canterbury", "Swansea", "Coleraine", "Paisley", "Bolton"])
+subject_choice = st.selectbox("Select Subject", ["Engineering", "Law", "Business", "Computer Science", "Health", "Design", "Marketing", "Data Science"])
+intake_choice = st.selectbox("Select Intake", ["September", "January"])
 
-# Search for matching universities
-filtered_universities = []
-for uni in universities:
-    if (
-        uni["country"] == country
-        and uni["city"] == city
-        and uni["distance_from_city_center"] <= distance
-    ):
-        if subject:
-            courses = uni["notable_courses"].get(subject_level, [])
-            if any(subject.lower() in course.lower() for course in courses):
-                filtered_universities.append(uni)
-        else:
-            filtered_universities.append(uni)
+# Function to filter universities based on user preferences
+def filter_universities(country, city, subject, intake):
+    filtered_universities = []
+    for university in UK_University_details:
+        # Check if university matches user preferences
+        if university["country"] == country and university["city"] == city:
+            for level, courses in university["notable_courses"].items():
+                if subject in courses and intake in university["intake"]:
+                    filtered_universities.append({
+                        "name": university["name"],
+                        "city": university["city"],
+                        "living_cost": university["living_cost"],
+                        "tuition_fee": university["tuition_fee"],
+                        "intake": university["intake"],
+                        "notable_courses": university["notable_courses"]
+                    })
+    return filtered_universities
 
-# Display results
-if filtered_universities:
-    st.subheader("Matching Universities:")
-    for uni in filtered_universities:
-        st.markdown(f"### {uni['name']}")
-        st.write(f"**Country:** {uni['country']}")
-        st.write(f"**City:** {uni['city']}")
-        st.write(f"**Living Cost:** {uni['living_cost']}")
-        st.write(f"**Tuition Fee:** {uni['tuition_fee']}")
-        st.write(f"**Distance from City Center:** {uni['distance_from_city_center']} miles")
-        st.write(f"**Notable Courses ({subject_level}):** {', '.join(uni['notable_courses'][subject_level])}")
-        st.write(f"**Additional Information:** {uni['additional_information']}")
+# Display the filtered universities based on user choices
+filtered_data = filter_universities(country_choice, city_choice, subject_choice, intake_choice)
+
+if filtered_data:
+    for university in filtered_data:
+        st.subheader(university["name"])
+        st.write(f"**City**: {university['city']}")
+        st.write(f"**Living Cost**: {university['living_cost']}")
+        st.write(f"**Tuition Fee**: {university['tuition_fee']}")
+        st.write(f"**Intake**: {', '.join(university['intake'])}")
+        st.write(f"**Notable Courses**: {', '.join([course for courses in university['notable_courses'].values() for course in courses])}")
         st.write("---")
 else:
-    st.warning("No universities match your criteria. Try adjusting your filters!")
+    st.write("No universities found for the selected preferences.")
