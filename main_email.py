@@ -2,6 +2,66 @@ import streamlit as st
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import os
+
+
+# def display_cover_image(image_path: str, overlay_text: str = None):
+#     # Display the cover image
+#     st.markdown(
+#         """
+#         <style>
+#             .cover-container {
+#                 position: relative;
+#                 text-align: center;
+#                 margin-bottom: 20px;
+#             }
+#             .cover-image {
+#                 width: 100%;
+#                 border-radius: 15px;
+#                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+#             }
+#             .overlay-text {
+#                 position: absolute;
+#                 top: 50%;
+#                 left: 50%;
+#                 transform: translate(-50%, -50%);
+#                 background-color: rgba(0, 0, 0, 0.6);
+#                 color: white;
+#                 padding: 10px 20px;
+#                 font-size: 24px;
+#                 font-weight: bold;
+#                 border-radius: 5px;
+#             }
+#         </style>
+#         """,
+#         unsafe_allow_html=True,
+#     )
+    
+#     if overlay_text:
+#         # Use HTML to layer the image and text
+#         st.markdown(
+#             f"""
+#             <div class="cover-container">
+#                 <img src="{image_path}" alt="Cover Image" class="cover-image">
+#                 <div class="overlay-text">{overlay_text}</div>
+#             </div>
+#             """,
+#             unsafe_allow_html=True,
+#         )
+#     else:
+#         # Fallback to using Streamlit's st.image for simpler rendering
+#         st.image(image_path, use_column_width=True, caption="Cover Image")
+
+# # Example usage:
+# image_path = os.path.abspath("assets\cover_photo.png")
+
+# # image_path = "cover_image.jpg"  # Use this if the image is stored locally in your project folder
+# overlay_text = "Welcome to Our Application"
+
+# # Call the function to display the cover image
+# display_cover_image(image_path, overlay_text)
+
+
 
 # University details dictionary (Add the full dictionary from your previous data)
 UK_University_details = [
@@ -208,7 +268,64 @@ def filter_universities(country, city, subject, intake):
                     filtered_universities.append(university)
     return filtered_universities
 
-# # Function to send email
+# Function to send email
+def send_email(to_email, filtered_universities):
+    sender_email = "farhaan@csmeta.pro"  # Replace with your email
+    sender_password = "FARhaan101&"  # Replace with your email password
+
+    # Email Content
+    subject = "University Search Results"
+    body = "Here are the universities that match your preferences:\n\n"
+    
+    for university in filtered_universities:
+        body += f"University Name: {university['name']}\n"
+        body += f"City: {university['city']}\n"
+        body += f"Living Cost: {university['living_cost']}\n"
+        body += f"Tuition Fee: {university['tuition_fee']}\n"
+        body += f"Intake: {', '.join(university['intake'])}\n"
+        body += f"Notable Courses: {', '.join([course for courses in university['notable_courses'].values() for course in courses])}\n"
+        body += "---\n\n"
+
+    # Email Setup
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        # Connect to the SMTP server using SSL
+        with smtplib.SMTP_SSL("send.one.com", 465) as server:
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+        return "Email sent successfully!"
+    except Exception as e:
+        return f"Error sending email: {str(e)}"
+
+
+# Filter universities based on user preferences
+filtered_data = filter_universities(country_choice, city_choice, subject_choice, intake_choice)
+
+# Display filtered results
+if filtered_data:
+    st.subheader("Filtered Universities:")
+    for university in filtered_data:
+        st.write(f"**University Name**: {university['name']}")
+        st.write(f"**City**: {university['city']}")
+        st.write(f"**Living Cost**: {university['living_cost']}")
+        st.write(f"**Tuition Fee**: {university['tuition_fee']}")
+        st.write(f"**Intake**: {', '.join(university['intake'])}")
+        st.write(f"**Notable Courses**: {', '.join([course for courses in university['notable_courses'].values() for course in courses])}")
+        st.write("---")
+    
+    # Email Button
+    if email_input:
+        if st.button("Send Results to Email"):
+            response = send_email(email_input, filtered_data)
+            st.success(response)
+else:
+    st.write("No universities found for the selected preferences.")
+
 # def send_email(to_email, filtered_universities):
 #     sender_email = "farhaan@csmeta.pro"  # Replace with your email
 #     sender_password = "FARhaan101&"  # Replace with your email password
@@ -216,14 +333,9 @@ def filter_universities(country, city, subject, intake):
 #     # Email Content
 #     subject = "University Search Results"
 #     body = "Here are the universities that match your preferences:\n\n"
-
 #     for university in filtered_universities:
 #         body += f"University Name: {university['name']}\n"
 #         body += f"City: {university['city']}\n"
-#         body += f"Living Cost: {university['living_cost']}\n"
-#         body += f"Tuition Fee: {university['tuition_fee']}\n"
-#         body += f"Intake: {', '.join(university['intake'])}\n"
-#         body += f"Notable Courses: {', '.join([course for courses in university['notable_courses'].values() for course in courses])}\n"
 #         body += "---\n\n"
 
 #     # Email Setup
@@ -233,10 +345,10 @@ def filter_universities(country, city, subject, intake):
 #     msg["Subject"] = subject
 #     msg.attach(MIMEText(body, "plain"))
 
+  
 #     try:
-#         # Connect to the email server and send the email
-#         with smtplib.SMTP("send.one.com", 465) as server:
-#             server.starttls()
+#         # Connect to the SMTP server using SSL
+#         with smtplib.SMTP_SSL("send.one.com", 465) as server:
 #             server.login(sender_email, sender_password)
 #             server.sendmail(sender_email, to_email, msg.as_string())
 #         return "Email sent successfully!"
@@ -265,55 +377,3 @@ def filter_universities(country, city, subject, intake):
 #             st.success(response)
 # else:
 #     st.write("No universities found for the selected preferences.")
-
-def send_email(to_email, filtered_universities):
-    sender_email = "farhaan@csmeta.pro"  # Replace with your email
-    sender_password = "FARhaan101&"  # Replace with your email password
-
-    # Email Content
-    subject = "University Search Results"
-    body = "Here are the universities that match your preferences:\n\n"
-    for university in filtered_universities:
-        body += f"University Name: {university['name']}\n"
-        body += f"City: {university['city']}\n"
-        body += "---\n\n"
-
-    # Email Setup
-    msg = MIMEMultipart()
-    msg["From"] = sender_email
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "plain"))
-
-  
-    try:
-        # Connect to the SMTP server using SSL
-        with smtplib.SMTP_SSL("send.one.com", 465) as server:
-            server.login(sender_email, sender_password)
-            server.sendmail(sender_email, to_email, msg.as_string())
-        return "Email sent successfully!"
-    except Exception as e:
-        return f"Error sending email: {str(e)}"
-
-# Filter universities based on user preferences
-filtered_data = filter_universities(country_choice, city_choice, subject_choice, intake_choice)
-
-# Display filtered results
-if filtered_data:
-    st.subheader("Filtered Universities:")
-    for university in filtered_data:
-        st.write(f"**University Name**: {university['name']}")
-        st.write(f"**City**: {university['city']}")
-        st.write(f"**Living Cost**: {university['living_cost']}")
-        st.write(f"**Tuition Fee**: {university['tuition_fee']}")
-        st.write(f"**Intake**: {', '.join(university['intake'])}")
-        st.write(f"**Notable Courses**: {', '.join([course for courses in university['notable_courses'].values() for course in courses])}")
-        st.write("---")
-    
-    # Email Button
-    if email_input:
-        if st.button("Send Results to Email"):
-            response = send_email(email_input, filtered_data)
-            st.success(response)
-else:
-    st.write("No universities found for the selected preferences.")
